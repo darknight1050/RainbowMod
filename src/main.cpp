@@ -1,7 +1,5 @@
 #include "../include/main.hpp"
 
-using namespace std;
-
 static rapidjson::Document& config_doc = Configuration::config;
 
 static bool isInTutorial = false; 
@@ -16,7 +14,7 @@ static float environmentColor0 = 0;
 static float environmentColor1 = 0;
 static float obstaclesColor = 0;
 
-static map<Il2CppObject*, vector<Il2CppObject*>> sabersMaterials;
+static std::map<Il2CppObject*, std::vector<Il2CppObject*>> sabersMaterials;
 
 Color ColorFromHSB(float hue, float saturation, float brightness){
     hue/=360.0f;
@@ -96,7 +94,7 @@ Il2CppObject* GetFirstObjectOfType(Il2CppClass* klass){
 void CacheSaber(Il2CppObject* saber){
     if(!isInTutorial){
         if(Config.QSabers){
-            vector<Il2CppObject*> materials; 
+            std::vector<Il2CppObject*> materials; 
             bool getInactive = false;
             Il2CppString* glowString = il2cpp_utils::createcsstr("_Glow");
             Il2CppString* bloomString = il2cpp_utils::createcsstr("_Bloom");
@@ -156,7 +154,7 @@ void CacheSaber(Il2CppObject* saber){
 
 void SetSaberColor(Il2CppObject* saber, Color color){
     Il2CppString* colorString = il2cpp_utils::createcsstr("_Color");
-    map<Il2CppObject*, vector<Il2CppObject*>>::iterator it = sabersMaterials.find(saber);
+    std::map<Il2CppObject*, std::vector<Il2CppObject*>>::iterator it = sabersMaterials.find(saber);
     if(it == sabersMaterials.end())
     {
         CacheSaber(saber);

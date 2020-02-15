@@ -1,14 +1,6 @@
 #pragma once
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h> 
-#include <fcntl.h>
-#include <wchar.h>
-#include <sys/stat.h>
 #include <map>
 #include <vector>
-#include <thread>
 
 #include "../extern/beatsaber-hook/shared/utils/utils.h"
 
@@ -69,5 +61,3 @@ class ColorCollection {
         static const MethodInfo* simpleColorSO_setColor;
         static const MethodInfo* SO_createInstance;
 };
-
-__attribute__((constructor)) void lib_main();
