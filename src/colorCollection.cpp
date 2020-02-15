@@ -86,7 +86,6 @@ void ColorCollection::SetToColorScheme(Il2CppObject* colorScheme) {
 
 void ColorCollection::SetParticleEffects(Array<Il2CppObject*>* particles, Il2CppObject* colorSO0, Il2CppObject* colorSO1) {
     ColorCollection::CacheIl2Cpp();
-    // Create ColorSOs to wrap the colors
     for (int i = 0; i < particles->Length(); i++) {
         il2cpp_utils::SetFieldValue(particles->values[i], ColorCollection::particleLightColor0Field, colorSO0);
         il2cpp_utils::SetFieldValue(particles->values[i], ColorCollection::particleLightColor1Field, colorSO1);
@@ -105,8 +104,8 @@ void ColorCollection::SetLightSwitchEventEffects(Array<Il2CppObject*>* lightSwit
 
 void ColorCollection::SetToColorManager(Il2CppObject* colorManager) {
     ColorCollection::CacheIl2Cpp();
-    Il2CppObject* scheme = il2cpp_utils::GetFieldValueUnsafe<Il2CppObject*>(colorManager, managerColorSchemaField);
-    SetToColorScheme(scheme);
+    //Il2CppObject* scheme = il2cpp_utils::GetFieldValueUnsafe<Il2CppObject*>(colorManager, managerColorSchemaField);
+    //SetToColorScheme(scheme);
     il2cpp_utils::RunMethod(il2cpp_utils::GetFieldValueUnsafe<Il2CppObject*>(colorManager, ColorCollection::managerSaberAColorField), ColorCollection::simpleColorSO_setColor, &saberAColor);
     il2cpp_utils::RunMethod(il2cpp_utils::GetFieldValueUnsafe<Il2CppObject*>(colorManager, ColorCollection::managerSaberBColorField), ColorCollection::simpleColorSO_setColor, &saberBColor);
     Il2CppObject* environmentColorSO0 = il2cpp_utils::GetFieldValueUnsafe<Il2CppObject*>(colorManager, ColorCollection::managerEnvironmentColor0Field);
@@ -114,8 +113,8 @@ void ColorCollection::SetToColorManager(Il2CppObject* colorManager) {
     il2cpp_utils::RunMethod(environmentColorSO0, ColorCollection::simpleColorSO_setColor, &environmentColor0);
     il2cpp_utils::RunMethod(environmentColorSO1, ColorCollection::simpleColorSO_setColor, &environmentColor1);
     il2cpp_utils::RunMethod(il2cpp_utils::GetFieldValueUnsafe<Il2CppObject*>(colorManager, ColorCollection::managerObstaclesColorField), ColorCollection::simpleColorSO_setColor, &obstaclesColor);
-    SetParticleEffects(GetAllObjectsOfType(particleTypeObject), environmentColorSO0, environmentColorSO1);
-    SetLightSwitchEventEffects(GetAllObjectsOfType(lightEventTypeObject), environmentColorSO0, environmentColorSO1);
+    //SetParticleEffects(GetAllObjectsOfType(particleTypeObject), environmentColorSO0, environmentColorSO1);
+    //SetLightSwitchEventEffects(GetAllObjectsOfType(lightEventTypeObject), environmentColorSO0, environmentColorSO1);
 }
 
 ColorCollection::ColorCollection() {
