@@ -1,167 +1,114 @@
 #include "../include/main.hpp"
 
-static rapidjson::Document& config_doc = Configuration::config;
+rapidjson::Document& config_doc = Configuration::config;
 
-static bool isInTutorial = false; 
+bool isInTutorial = false; 
 
-static ColorCollection defaultColorScheme;
-static bool setDefaultColorScheme = false;
-static ColorCollection colorScheme;
+float saberAColorHue = 0;
+float saberBColorHue = 0;
+float environmentColor0Hue = 0;
+float environmentColor1Hue = 0;
+float obstaclesColorHue = 0;
 
-static float saberA = 0;
-static float saberB = 0;
-static float environmentColor0 = 0;
-static float environmentColor1 = 0;
-static float obstaclesColor = 0;
+Color saberAColor;
+Color saberBColor;
+Color environmentColor0;
+Color environmentColor1;
+Color obstaclesColor;
 
-static std::map<Il2CppObject*, std::vector<Il2CppObject*>> sabersMaterials;
+Il2CppObject* simpleColorSO0 = nullptr;
+Il2CppObject* simpleColorSO1 = nullptr;
 
-Color ColorFromHSB(float hue, float saturation, float brightness){
-    hue/=360.0f;
-    int r = 0, g = 0, b = 0;
-    if (saturation == 0)
-    {
-        r = g = b = (int)(brightness * 255.0f + 0.5f);
-    }
-    else
-    {
-        float h = (hue - (float)floor (hue)) * 6.0f;
-        float f = h - (float)floor (h);
-        float p = brightness * (1.0f - saturation);
-        float q = brightness * (1.0f - saturation * f);
-        float t = brightness * (1.0f - (saturation * (1.0f - f)));
-        switch ((int)h)
-        {
-            case 0:
-                r = (int)(brightness * 255.0f + 0.5f);
-                g = (int)(t * 255.0f + 0.5f);
-                b = (int)(p * 255.0f + 0.5f);
-                break;
-            case 1:
-                r = (int)(q * 255.0f + 0.5f);
-                g = (int)(brightness * 255.0f + 0.5f);
-                b = (int)(p * 255.0f + 0.5f);
-                break;
-            case 2:
-                r = (int)(p * 255.0f + 0.5f);
-                g = (int)(brightness * 255.0f + 0.5f);
-                b = (int)(t * 255.0f + 0.5f);
-                break;
-            case 3:
-                r = (int)(p * 255.0f + 0.5f);
-                g = (int)(q * 255.0f + 0.5f);
-                b = (int)(brightness * 255.0f + 0.5f);
-                break;
-            case 4:
-                r = (int)(t * 255.0f + 0.5f);
-                g = (int)(p * 255.0f + 0.5f);
-                b = (int)(brightness * 255.0f + 0.5f);
-                break;
-            case 5:
-                r = (int)(brightness * 255.0f + 0.5f);
-                g = (int)(p * 255.0f + 0.5f);
-                b = (int)(q * 255.0f + 0.5f);
-                break;
-        }
-    }
+Il2CppObject* colorManager = nullptr;
+std::map<Il2CppObject*, std::vector<Il2CppObject*>> sabersMaterials;
+Array<Il2CppObject*>* lightSwitchEventEffects = nullptr;
+
+Color ColorFromHSV(float h, float s, float v){
+    h/=360.0f;
     Color color;
-    color.r = r/255.0f;
-    color.g = g/255.0f;
-    color.b = b/255.0f;
-    color.a = 1.0f;
+    il2cpp_utils::RunMethod(&color, il2cpp_utils::GetClassFromName("UnityEngine", "Color"), "HSVToRGB", h, s, v);
     return color;
 }
 
-Color GetColorFromManager(Il2CppObject* colorManager, const char* fieldName){
-    Color c;
-    il2cpp_utils::RunMethod<Color>(&c, il2cpp_utils::GetFieldValue(colorManager, fieldName), "get_color");
-    return c;
-}
-
-Il2CppObject* GetFirstObjectOfType(Il2CppClass* klass){
+Array<Il2CppObject*>* GetAllObjectsOfType(Il2CppObject* type) {
     Array<Il2CppObject*>* objects;
-    il2cpp_utils::RunMethod(&objects, il2cpp_utils::GetClassFromName("UnityEngine", "Resources"), "FindObjectsOfTypeAll", il2cpp_functions::type_get_object(il2cpp_functions::class_get_type(klass)));
-    if (objects != nullptr)
-    {
-        return objects->values[0];
-    }
-    else
-    {
-        return nullptr;
-    }
+    il2cpp_utils::RunMethod(&objects, il2cpp_utils::GetClassFromName("UnityEngine", "Resources"), "FindObjectsOfTypeAll", type);
+    return objects;
 }
 
-void CacheSaber(Il2CppObject* saber){
-    if(!isInTutorial){
-        if(Config.QSabers){
-            std::vector<Il2CppObject*> materials; 
-            bool getInactive = false;
-            Il2CppString* glowString = il2cpp_utils::createcsstr("_Glow");
-            Il2CppString* bloomString = il2cpp_utils::createcsstr("_Bloom");
-            Il2CppClass* shaderClass = il2cpp_utils::GetClassFromName("UnityEngine", "Shader");
-            const MethodInfo* shader_PropertyToIDMethod = il2cpp_functions::class_get_method_from_name(shaderClass, "PropertyToID", 1);
-            int glowID, bloomID;
-            il2cpp_utils::RunMethod(&glowID, nullptr, shader_PropertyToIDMethod, glowString);
-            il2cpp_utils::RunMethod(&bloomID, nullptr, shader_PropertyToIDMethod, bloomString);
-            Array<Il2CppObject*>* childTransforms;
-            il2cpp_utils::RunMethod(&childTransforms, saber, "GetComponentsInChildren", il2cpp_functions::type_get_object(il2cpp_functions::class_get_type(il2cpp_utils::GetClassFromName("UnityEngine", "Transform"))), &getInactive);
-            for (int i= 0; i< childTransforms->Length(); i++)
+Color GetColorFromManager(const char* fieldName){
+    Color color;
+    il2cpp_utils::RunMethod<Color>(&color, il2cpp_utils::GetFieldValue(colorManager, fieldName), "get_color");
+    return color;
+}
+
+Il2CppObject* CreateColorSO() {
+    Il2CppObject* simpleColorSO;
+    il2cpp_utils::RunMethod(&simpleColorSO, nullptr, il2cpp_utils::FindMethod("UnityEngine", "ScriptableObject", "CreateInstance", 1), il2cpp_utils::GetSystemType("", "SimpleColorSO"));
+    return simpleColorSO;
+}
+
+void CacheSaberMaterials(Il2CppObject* saber){
+    std::vector<Il2CppObject*> materials; 
+    Il2CppClass* shaderClass = il2cpp_utils::GetClassFromName("UnityEngine", "Shader");
+    int glowID, bloomID;
+    il2cpp_utils::RunMethod(&glowID, shaderClass, "PropertyToID", il2cpp_utils::createcsstr("_Glow"));
+    il2cpp_utils::RunMethod(&bloomID, shaderClass, "PropertyToID", il2cpp_utils::createcsstr("_Bloom"));
+    Array<Il2CppObject*>* childTransforms;
+    il2cpp_utils::RunMethod(&childTransforms, saber, "GetComponentsInChildren", il2cpp_utils::GetSystemType("UnityEngine", "Transform"), false);
+    for (int i= 0; i< childTransforms->Length(); i++)
+    {
+        Array<Il2CppObject*>* renderers;
+        il2cpp_utils::RunMethod(&renderers, childTransforms->values[i], "GetComponentsInChildren", il2cpp_utils::GetSystemType("UnityEngine", "Renderer"), false);
+        for (int j = 0; j < renderers->Length(); j++)
+        {
+            Array<Il2CppObject*>* sharedMaterials;
+            il2cpp_utils::RunMethod(&sharedMaterials, renderers->values[j], "get_sharedMaterials");
+            for (int h = 0; h < sharedMaterials->Length(); h++)
             {
-                Array<Il2CppObject*>* renderers;
-                il2cpp_utils::RunMethod(&renderers, childTransforms->values[i], "GetComponentsInChildren", il2cpp_functions::type_get_object(il2cpp_functions::class_get_type(il2cpp_utils::GetClassFromName("UnityEngine", "Renderer"))), &getInactive);
-                for (int j = 0; j < renderers->Length(); j++)
+                Il2CppObject* material = sharedMaterials->values[h];
+                bool setColor = false;
+                bool hasGlow;
+                il2cpp_utils::RunMethod(&hasGlow, material, "HasProperty", glowID);
+                if (hasGlow)
                 {
-                    Array<Il2CppObject*>* sharedMaterials;
-                    il2cpp_utils::RunMethod(&sharedMaterials, renderers->values[j], "get_sharedMaterials");
-                    for (int h = 0; h < sharedMaterials->Length(); h++)
+                    float glowFloat;
+                    il2cpp_utils::RunMethod(&glowFloat, material, "GetFloat", glowID);
+                    if (glowFloat > 0)
+                       setColor = true;
+                }
+                if (!setColor)
+                {
+                    bool hasBloom;
+                    il2cpp_utils::RunMethod(&hasBloom, material, "HasProperty", bloomID);
+                    if (hasBloom)
                     {
-                        Il2CppObject* material = sharedMaterials->values[h];
-                        bool setColor = false;
-                        bool hasGlow;
-                        il2cpp_utils::RunMethod(&hasGlow, material, "HasProperty", &glowID);
-                        if (hasGlow)
-                        {
-                            float glowFloat;
-                            il2cpp_utils::RunMethod(&glowFloat, material, "GetFloat", &glowID);
-                            if (glowFloat > 0)
-                                setColor = true;
-                        }
-                        if (!setColor)
-                        {
-                            bool hasBloom;
-                            il2cpp_utils::RunMethod(&hasBloom, material, "HasProperty", &bloomID);
-                            if (hasBloom)
-                            {
-                                float bloomFloat;
-                                il2cpp_utils::RunMethod(&bloomFloat, material, "GetFloat", &bloomID);
-                                if (bloomFloat > 0)
-                                    setColor = true;
-                            }
-                        }
-                        if (setColor)
-                        {
-                            materials.push_back(material); 
-                        }
+                        float bloomFloat;
+                        il2cpp_utils::RunMethod(&bloomFloat, material, "GetFloat", bloomID);
+                        if (bloomFloat > 0)
+                            setColor = true;
                     }
                 }
+                if (setColor)
+                {
+                    materials.push_back(material); 
+                }
             }
-            if(materials.size() > 0)
-                sabersMaterials[saber] = materials;
         }
     }
-    
+    if(materials.size() > 0)
+        sabersMaterials[saber] = materials;
 }
 
 void SetSaberColor(Il2CppObject* saber, Color color){
-    Il2CppString* colorString = il2cpp_utils::createcsstr("_Color");
     std::map<Il2CppObject*, std::vector<Il2CppObject*>>::iterator it = sabersMaterials.find(saber);
     if(it == sabersMaterials.end())
     {
-        CacheSaber(saber);
+        CacheSaberMaterials(saber);
     }
     for (Il2CppObject* material : sabersMaterials[saber]) 
     {
-        il2cpp_utils::RunMethod(material, "SetColor", colorString, &color);
+        il2cpp_utils::RunMethod(material, "SetColor", il2cpp_utils::createcsstr("_Color"), color);
     }
 }
 
@@ -175,72 +122,98 @@ MAKE_HOOK_OFFSETLESS(TutorialController_OnDestroy, void, Il2CppObject* self){
     isInTutorial = false;
 }
 
+MAKE_HOOK_OFFSETLESS(ColorManager_ColorForNoteType, Color, Il2CppObject* self, int type){
+    if(Config.Notes){
+        return type == 0 ? saberAColor : saberBColor;
+    }
+    return ColorManager_ColorForNoteType(self, type);
+}
+
+MAKE_HOOK_OFFSETLESS(ColorManager_ColorForSaberType, Color, Il2CppObject* self, int type){
+    if(Config.Sabers){
+        return type == 0 ? saberAColor : saberBColor;
+    }
+    return ColorManager_ColorForSaberType(self, type);
+}
+
+MAKE_HOOK_OFFSETLESS(ColorManager_EffectsColorForSaberType, Color, Il2CppObject* self, int type){
+    if(Config.Sabers){
+        return type == 0 ? saberAColor : saberBColor;
+    }
+    return ColorManager_EffectsColorForSaberType(self, type);
+}
+
+MAKE_HOOK_OFFSETLESS(ColorManager_GetObstacleEffectColor, Color, Il2CppObject* self){
+    if(Config.Walls){
+        return obstaclesColor;
+    }
+    return ColorManager_GetObstacleEffectColor(self);
+}
+
+MAKE_HOOK_OFFSETLESS(SaberManager_RefreshSabers, void, Il2CppObject* self){
+    lightSwitchEventEffects = GetAllObjectsOfType(il2cpp_utils::GetSystemType("", "LightSwitchEventEffect"));
+    if(simpleColorSO0 == nullptr || simpleColorSO1 == nullptr){
+        simpleColorSO0 = CreateColorSO();
+        simpleColorSO1 = CreateColorSO();
+    }
+    SaberManager_RefreshSabers(self);
+}
+
 MAKE_HOOK_OFFSETLESS(SaberManager_Update, void, Il2CppObject* self){
-    Il2CppObject* colorManager = GetFirstObjectOfType(il2cpp_utils::GetClassFromName("", "ColorManager"));
-    if (colorManager != nullptr)
-    {
-        if(!isInTutorial && Config.QSabers) {
-            SetSaberColor(il2cpp_utils::GetFieldValue(self, "_leftSaber"), colorScheme.saberAColor);
-            SetSaberColor(il2cpp_utils::GetFieldValue(self, "_rightSaber"), colorScheme.saberBColor);
+    if(colorManager != nullptr){
+        if(isInTutorial){
+            saberAColor = GetColorFromManager( "_saberAColor");
+            saberBColor = GetColorFromManager( "_saberBColor");
+            environmentColor0 = GetColorFromManager( "_environmentColor0");
+            environmentColor1 = GetColorFromManager( "_environmentColor1");
+            obstaclesColor = GetColorFromManager( "_obstaclesColor");
+        }else{
+            saberAColorHue = fmod(saberAColorHue+Config.SaberASpeed, 360);
+            saberBColorHue = fmod(saberBColorHue+Config.SaberBSpeed, 360);
+            saberAColor = ColorFromHSV(saberAColorHue, 1.0, 1.0);
+            saberBColor = ColorFromHSV(saberBColorHue, 1.0, 1.0);
+
+            environmentColor0Hue = fmod(environmentColor0Hue+Config.LightASpeed, 360);
+            environmentColor1Hue = fmod(environmentColor1Hue+Config.LightBSpeed, 360);
+            environmentColor0 = ColorFromHSV(environmentColor0Hue, 1.0, 1.0);
+            environmentColor1 = ColorFromHSV(environmentColor1Hue, 1.0, 1.0);
+
+            obstaclesColorHue = fmod(obstaclesColorHue+Config.WallsSpeed, 360);
+            obstaclesColor = ColorFromHSV(obstaclesColorHue, 1.0, 1.0);
+        }
+        Il2CppObject* colorsDidChangeEvent = il2cpp_utils::GetFieldValue(colorManager, "colorsDidChangeEvent");
+        if(colorsDidChangeEvent != nullptr)
+            il2cpp_utils::RunMethod(colorsDidChangeEvent, "Invoke");
+        if(!isInTutorial && Config.QSabers && Config.Sabers) {
+            SetSaberColor(il2cpp_utils::GetFieldValue(self, "_leftSaber"), saberAColor);
+            SetSaberColor(il2cpp_utils::GetFieldValue(self, "_rightSaber"), saberBColor);
+        }
+        if(Config.Lights){
+            il2cpp_utils::RunMethod(simpleColorSO0, "SetColor", environmentColor0);
+            il2cpp_utils::RunMethod(simpleColorSO1, "SetColor", environmentColor1);
+            for (int i = 0; i < lightSwitchEventEffects->Length(); i++) {
+                Il2CppObject* lightSwitchEventEffect = lightSwitchEventEffects->values[i];
+                if(lightSwitchEventEffect != nullptr){
+                    il2cpp_utils::SetFieldValue(lightSwitchEventEffect, "_lightColor0", simpleColorSO0);
+                    il2cpp_utils::SetFieldValue(lightSwitchEventEffect, "_lightColor1", simpleColorSO1);
+                    il2cpp_utils::SetFieldValue(lightSwitchEventEffect, "_highlightColor0", simpleColorSO0);
+                    il2cpp_utils::SetFieldValue(lightSwitchEventEffect, "_highlightColor1", simpleColorSO1);
+                }
+            }
         }
     }
     SaberManager_Update(self);
 }
 
-MAKE_HOOK_OFFSETLESS(SaberBurnMarkSparkles_LateUpdate, void, Il2CppObject* self, void *type){
-    Il2CppObject* colorManager = il2cpp_utils::GetFieldValue(self, "_colorManager");
-    if(colorManager != nullptr){
-        if (!setDefaultColorScheme) {
-            Il2CppObject* scheme;
-            il2cpp_utils::RunMethod(&scheme, il2cpp_utils::GetFieldValueUnsafe<Il2CppObject*>(colorManager, "_defaultColorScheme"), "get_colorScheme");
-            defaultColorScheme = ColorCollection(scheme);
-            setDefaultColorScheme = true;
-        }
-        if(isInTutorial){
-            colorScheme.saberAColor = GetColorFromManager(colorManager, "_saberAColor");
-            colorScheme.saberBColor = GetColorFromManager(colorManager, "_saberBColor");
-            colorScheme.environmentColor0 = GetColorFromManager(colorManager, "_environmentColor0");
-            colorScheme.environmentColor1 = GetColorFromManager(colorManager, "_environmentColor1");
-            colorScheme.obstaclesColor = GetColorFromManager(colorManager, "_obstaclesColor");
-        }else{
-            saberA = fmod(saberA+Config.SaberASpeed, 360);
-            saberB = fmod(saberB+Config.SaberBSpeed, 360);
-            environmentColor0 = fmod(environmentColor0+Config.LightASpeed, 360);
-            environmentColor1 = fmod(environmentColor1+Config.LightBSpeed, 360);
-            obstaclesColor = fmod(obstaclesColor+Config.WallsSpeed, 360);
-            if(Config.Sabers){
-                colorScheme.saberAColor = ColorFromHSB(saberA, 1.0, 1.0);
-                colorScheme.saberBColor = ColorFromHSB(saberB, 1.0, 1.0);
-            }else{
-                colorScheme.saberAColor = GetColorFromManager(colorManager, "_saberAColor");
-                colorScheme.saberBColor = GetColorFromManager(colorManager, "_saberBColor");
-            }
-            if(Config.Lights){
-                colorScheme.environmentColor0 = ColorFromHSB(environmentColor0, 1.0, 1.0);
-                colorScheme.environmentColor1 = ColorFromHSB(environmentColor1, 1.0, 1.0);
-            }else{
-                colorScheme.environmentColor0 = GetColorFromManager(colorManager, "_environmentColor0");
-                colorScheme.environmentColor1 = GetColorFromManager(colorManager, "_environmentColor1");
-            }
-            if(Config.Walls){
-                colorScheme.obstaclesColor = ColorFromHSB(obstaclesColor, 1.0, 1.0);
-            }else{
-                colorScheme.obstaclesColor = GetColorFromManager(colorManager, "_obstaclesColor");
-            }
-        }
-        colorScheme.SetToColorManager(colorManager);
-    }
-    SaberBurnMarkSparkles_LateUpdate(self, type);
-}
-
 MAKE_HOOK_OFFSETLESS(SaberWeaponTrail_get_color, Color, Il2CppObject* self){
+    colorManager = il2cpp_utils::GetFieldValue(self, "_colorManager");
     if(!Config.Sabers && Config.Trails){
         Il2CppObject* saberTypeObject = il2cpp_utils::GetFieldValue(self, "_saberTypeObject");
         int saberType;
-        il2cpp_utils::RunMethod(&saberType, saberTypeObject, "get_saberType"); 
+        il2cpp_utils::RunMethod(&saberType, saberTypeObject, "get_saberType");
         Color multiplierSaberColor = il2cpp_utils::GetFieldValueUnsafe<Color>(self, "_multiplierSaberColor");
-        
-        Color saberColor = saberType == 1 ? ColorFromHSB(saberB, 1.0, 1.0) : ColorFromHSB(saberA, 1.0, 1.0);
+            
+        Color saberColor = saberType == 0 ? saberAColor : saberBColor;
 
         saberColor.r = powf(saberColor.r * multiplierSaberColor.r, 2.2f);
         saberColor.g = powf(saberColor.g * multiplierSaberColor.g, 2.2f);
@@ -252,7 +225,7 @@ MAKE_HOOK_OFFSETLESS(SaberWeaponTrail_get_color, Color, Il2CppObject* self){
 }
 
 MAKE_HOOK_OFFSETLESS(GameNoteController_Update, void, Il2CppObject* self){
-    if(Config.Sabers){
+    if(Config.Notes){
         Il2CppObject* disappearingArrowController = il2cpp_utils::GetFieldValue(self, "_disappearingArrowController");
         Il2CppObject* colorNoteVisuals = il2cpp_utils::GetFieldValue(disappearingArrowController, "_colorNoteVisuals");
         Il2CppObject* noteController = il2cpp_utils::GetFieldValue(colorNoteVisuals, "_noteController");
@@ -261,36 +234,25 @@ MAKE_HOOK_OFFSETLESS(GameNoteController_Update, void, Il2CppObject* self){
         int noteType;
         il2cpp_utils::RunMethod(&noteType, noteData, "get_noteType"); 
 
-        Color noteColor;
-        
-        if(Config.Notes){
-            noteColor = noteType == 1 ? colorScheme.saberBColor : colorScheme.saberAColor;
-            il2cpp_utils::SetFieldValue(colorNoteVisuals, "_noteColor", &noteColor); 
-        }else{
-            if (setDefaultColorScheme)
-                noteColor = noteType == 1 ? defaultColorScheme.saberBColor : defaultColorScheme.saberAColor;
-            else {
-                GameNoteController_Update(self);
-                return;
-            }
-        } 
+        Color noteColor = noteType == 0 ? saberAColor : saberBColor;
+        il2cpp_utils::SetFieldValue(colorNoteVisuals, "_noteColor", &noteColor); 
         
         float arrowGlowIntensity = il2cpp_utils::GetFieldValueUnsafe<float>(colorNoteVisuals, "_arrowGlowIntensity");
         Color arrowGlowSpriteRendererColor = noteColor;
         arrowGlowSpriteRendererColor.a = arrowGlowIntensity;
         Il2CppObject* arrowGlowSpriteRenderer = il2cpp_utils::GetFieldValue(colorNoteVisuals, "_arrowGlowSpriteRenderer");
-        il2cpp_utils::RunMethod(arrowGlowSpriteRenderer, "set_color", &arrowGlowSpriteRendererColor); 
+        il2cpp_utils::RunMethod(arrowGlowSpriteRenderer, "set_color", arrowGlowSpriteRendererColor); 
         Il2CppObject* circleGlowSpriteRenderer = il2cpp_utils::GetFieldValue(colorNoteVisuals, "_circleGlowSpriteRenderer");
-        il2cpp_utils::RunMethod(circleGlowSpriteRenderer, "set_color", &noteColor); 
+        il2cpp_utils::RunMethod(circleGlowSpriteRenderer, "set_color", noteColor); 
         Array<Il2CppObject*>* materialPropertyBlockControllers = reinterpret_cast<Array<Il2CppObject*>*>(il2cpp_utils::GetFieldValue(colorNoteVisuals, "_materialPropertyBlockControllers"));
         
-        for(int i = 0;i<materialPropertyBlockControllers->Length();i++){
+        for(int i = 0; i < materialPropertyBlockControllers->Length(); i++){
             Il2CppObject* materialPropertyBlockController = materialPropertyBlockControllers->values[i];
             Il2CppObject* materialPropertyBlock;
             il2cpp_utils::RunMethod(&materialPropertyBlock, materialPropertyBlockController, "get_materialPropertyBlock"); 
             Color materialPropertyBlockColor = noteColor;
             materialPropertyBlockColor.a = 1.0f;
-            il2cpp_utils::RunMethod(materialPropertyBlock, "SetColor", il2cpp_utils::createcsstr("_Color"), &materialPropertyBlockColor);
+            il2cpp_utils::RunMethod(materialPropertyBlock, "SetColor", il2cpp_utils::createcsstr("_Color"), materialPropertyBlockColor);
             il2cpp_utils::RunMethod(materialPropertyBlockController, "ApplyChanges");
         }
     }
@@ -301,14 +263,12 @@ MAKE_HOOK_OFFSETLESS(ObstacleController_Update, void, Il2CppObject* self){
     if(Config.Walls){
         Il2CppObject* stretchableObstacle = il2cpp_utils::GetFieldValue(self, "_stretchableObstacle");
 
-        Color color = colorScheme.obstaclesColor;
-
         Il2CppObject* obstacleFrame = il2cpp_utils::GetFieldValue(stretchableObstacle, "_obstacleFrame");
         float width = il2cpp_utils::GetFieldValueUnsafe<float>(obstacleFrame, "width");
         float height = il2cpp_utils::GetFieldValueUnsafe<float>(obstacleFrame, "height");
         float length = il2cpp_utils::GetFieldValueUnsafe<float>(obstacleFrame, "length");
 
-        il2cpp_utils::RunMethod(stretchableObstacle, "SetSizeAndColor", &width, &height, &length, &color);
+        il2cpp_utils::RunMethod(stretchableObstacle, "SetSizeAndColor", width, height, length, obstaclesColor);
     }
     ObstacleController_Update(self);
 }
@@ -392,21 +352,26 @@ bool LoadConfig() {
     }
     return false;
 }
+
 extern "C" void load()
 {
     if(!LoadConfig())
         SaveConfig();
-    saberB = Config.SabersStartDiff;
-    environmentColor1 = Config.LightsStartDiff;
+    saberBColorHue = Config.SabersStartDiff;
+    environmentColor1Hue = Config.LightsStartDiff;
     log(INFO, "Starting RainbowMod installation...");
 
     INSTALL_HOOK_OFFSETLESS(TutorialController_Start, il2cpp_utils::FindMethod("", "TutorialController", "Start", 0));
     INSTALL_HOOK_OFFSETLESS(TutorialController_OnDestroy, il2cpp_utils::FindMethod("", "TutorialController", "OnDestroy", 0));
+    INSTALL_HOOK_OFFSETLESS(ColorManager_ColorForNoteType, il2cpp_utils::FindMethod("", "ColorManager", "ColorForNoteType", 1));
+    INSTALL_HOOK_OFFSETLESS(ColorManager_ColorForSaberType, il2cpp_utils::FindMethod("", "ColorManager", "ColorForSaberType", 1));
+    INSTALL_HOOK_OFFSETLESS(ColorManager_EffectsColorForSaberType, il2cpp_utils::FindMethod("", "ColorManager", "EffectsColorForSaberType", 1));
+    INSTALL_HOOK_OFFSETLESS(ColorManager_GetObstacleEffectColor, il2cpp_utils::FindMethod("", "ColorManager", "GetObstacleEffectColor", 0));
+    INSTALL_HOOK_OFFSETLESS(SaberManager_RefreshSabers, il2cpp_utils::FindMethod("", "SaberManager", "RefreshSabers", 0));
     INSTALL_HOOK_OFFSETLESS(SaberManager_Update, il2cpp_utils::FindMethod("", "SaberManager", "Update", 0));
-    INSTALL_HOOK_OFFSETLESS(SaberBurnMarkSparkles_LateUpdate, il2cpp_utils::FindMethod("", "SaberBurnMarkSparkles", "LateUpdate", 0));
     INSTALL_HOOK_OFFSETLESS(SaberWeaponTrail_get_color, il2cpp_utils::FindMethod("", "SaberWeaponTrail", "get_color", 0));
     INSTALL_HOOK_OFFSETLESS(GameNoteController_Update, il2cpp_utils::FindMethod("", "GameNoteController", "Update", 0));
     INSTALL_HOOK_OFFSETLESS(ObstacleController_Update, il2cpp_utils::FindMethod("", "ObstacleController", "Update", 0));
-
+    
     log(INFO, "Successfully installed RainbowMod!");
 }
