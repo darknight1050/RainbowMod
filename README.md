@@ -1,6 +1,6 @@
 # RainbowMod
 
-Rainbow effects!
+This mod adds Rainbow Lights, Walls, Sabers, Trails and Notes!
 
 ## Config
 
