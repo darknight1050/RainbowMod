@@ -19,3 +19,17 @@ static struct Config_t {
     double LightsStartDiff = 180.0;
     double WallsSpeed = 2.0;
 } Config;
+
+enum SaberType
+{
+	SaberA,
+	SaberB
+};
+
+enum NoteType
+{
+	NoteA,
+	NoteB,
+	GhostNote,
+	Bomb
+};

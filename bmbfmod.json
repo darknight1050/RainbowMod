@@ -6,8 +6,8 @@
         "This mod adds Rainbow Lights, Walls, Sabers, Trails and Notes\n Config: /sdcard/Android/data/com.beatgames.beatsaber/files/mod_cfgs/RainbowMod.json"
     ],
     "category": "Gameplay",
-    "gameVersion": "1.7.0",
-    "version": "0.2.1",
+    "gameVersion": "1.8.0",
+    "version": "0.2.2",
 	"links": {
 		"project-home": "https://github.com/darknight1050/RainbowMod"
 	},

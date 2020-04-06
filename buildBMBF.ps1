@@ -7,4 +7,4 @@ if (-not ($PSVersionTable.PSEdition -eq "Core")) {
 }
 
 & $buildScript NDK_PROJECT_PATH=$PSScriptRoot APP_BUILD_SCRIPT=$PSScriptRoot/Android.mk NDK_APPLICATION_MK=$PSScriptRoot/Application.mk
-Compress-Archive -Force -Path "./libs/arm64-v8a/librainbowmod.so","./bmbfmod.json" -DestinationPath "./rainbowmod_v0.2.1.zip"
+Compress-Archive -Force -Path "./libs/arm64-v8a/librainbowmod.so","./bmbfmod.json" -DestinationPath "./rainbowmod_v0.2.2.zip"
