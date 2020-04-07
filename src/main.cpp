@@ -209,7 +209,7 @@ MAKE_HOOK_OFFSETLESS(SaberManager_Update, void, Il2CppObject* self){
                     il2cpp_utils::RunMethod(colorsDidChangeEvent, "Invoke");
             }
     
-            if(!Config.Sabers && Config.Trails){
+            if(Config.Trails){
                 for(int i = 0; i < 2; i++){
                     Color saberColor = i == SaberA ? saberAColor : saberBColor;
                     Il2CppObject* basicSaberModelController = basicSaberModelControllers[i];
