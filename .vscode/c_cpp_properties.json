@@ -1,22 +1,23 @@
 {
-    "configurations": [
-        {
-            "name": "Quest",
-            "defines": [
-                "MOD_ID=\"RainbowMod\"",
-                "VERSION=\"0.1.0\"",
-                "__GNUC__",
-                "__aarch64__"
-            ],
-            "includePath": [
-                "${workspaceFolder}/**",
-                "C:/Program Files/Unity/Hub/Editor/2018.3.14f1/Editor/Data/il2cpp/libil2cpp",
-                "c:/Users/adamz/Downloads/ndk-bundle/**"
-            ],
-            "cStandard": "c11",
-            "cppStandard": "c++20",
-            "intelliSenseMode": "clang-x64"
-        }
-    ],
-    "version": 4
+  "configurations": [
+    {
+      "defines": [
+        "__GNUC__",
+        "__aarch64__",
+        "VERSION=\"0.2.0\""
+      ],
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/include/**",
+        "${workspaceFolder}/shared/**",
+        "${workspaceFolder}/extern/**",
+        "C:/Development/Tools/android-ndk-r21d/**"
+      ],
+      "name": "Quest",
+      "cStandard": "c11",
+      "cppStandard": "c++20",
+      "intelliSenseMode": "clang-x64"
+    }
+  ],
+  "version": 4
 }

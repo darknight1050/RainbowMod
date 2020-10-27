@@ -1,26 +1,44 @@
 {
-    "id": "RainbowMod",
-    "name": "RainbowMod",
-    "author": "darknight1050",
-    "description": [
-        "This mod adds Rainbow Lights, Walls, Sabers, Trails and Notes\n Config: /sdcard/Android/data/com.beatgames.beatsaber/files/mod_cfgs/RainbowMod.json"
-    ],
-    "category": "Gameplay",
-    "gameVersion": "1.8.0",
-    "version": "0.2.21",
+	"id": "RainbowMod",
+	"name": "RainbowMod",
+	"author": "darknight1050",
+	"description": [
+		"This mod adds Rainbow Lights, Walls, Sabers, Trails and Notes\n Config: /sdcard/Android/data/com.beatgames.beatsaber/files/mod_cfgs/RainbowMod.json"
+	],
+	"category": "Other",
+	"gameVersion": "1.12.2",
+	"version": "0.2.0",
 	"links": {
 		"project-home": "https://github.com/darknight1050/RainbowMod"
 	},
-    "platform": "Quest",
-    "components": [
+	"platform": "Quest",
+	"components": [
+		{
+			"Type": "HookMod",
+			"InstallAction": {
+				"InstallLibraryFile": "librainbowmod_0_2_0.so"
+			},
+			"UninstallAction": {
+				"RemoveLibraryFile": "librainbowmod_0_2_0.so"
+			}
+		},
         {
-            "Type": "HookMod",
-            "InstallAction": {
-                "InstallLibraryFile": "librainbowmod.so"
-            },
-            "UninstallAction": {
-                "RemoveLibraryFile": "librainbowmod.so"
+            "type": "HookModLibrary",
+            "installAction": {
+              "installLibraryFile": "libcodegen_0_3_4.so"
+            }
+        },
+        {
+            "type": "HookModLibrary",
+            "installAction": {
+              "installLibraryFile": "libbeatsaber-hook_0_7_8.so"
+            }
+        },
+        {
+            "type": "HookModLibrary",
+            "installAction": {
+              "installLibraryFile": "libcustom-types.so"
             }
         }
-    ]
+	]
 }

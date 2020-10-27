@@ -45,3 +45,9 @@ ndkpath.txt
 *.zip
 
 discordmsg.md
+
+extern
+
+qpm.shared.json
+
+Android.mk.backup
